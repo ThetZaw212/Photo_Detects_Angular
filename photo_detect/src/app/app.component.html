@@ -9,7 +9,7 @@
     <p class="loading-text">Detecting objects...</p>
   </div>
 
-  <!-- Detection result -->
+  <!-- result -->
   <div *ngIf="detectionResult" class="detection-result">
     <p [ngClass]="{'success': detectionResult === 'Human detected!', 'error': detectionResult === 'No human detected'}">
       {{ detectionResult }}
