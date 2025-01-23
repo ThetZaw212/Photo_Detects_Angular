@@ -65,4 +65,5 @@ export class AppComponent {
       this.isLoading = false;
     };
   }
+  
 }
