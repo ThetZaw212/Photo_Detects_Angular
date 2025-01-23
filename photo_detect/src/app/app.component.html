@@ -1,5 +1,18 @@
 <div>
   <h2>Photo Detection</h2>
-  <input type="file" (change)="onFileChange($event)" />
-  <canvas #canvas style="width: 500px; height: 500px;"></canvas>
+  <input type="file" (change)="onFileChange($event)" #fileInput />
+  <canvas #canvas style="width: 500px; height: 500px; border: 1px solid #ccc;"></canvas>
+
+  <!-- Loading overlay -->
+  <div *ngIf="isLoading" class="loading-overlay">
+    <div class="spinner"></div>
+    <p class="loading-text">Detecting objects...</p>
+  </div>
+
+  <!-- Detection result -->
+  <div *ngIf="detectionResult" class="detection-result">
+    <p [ngClass]="{'success': detectionResult === 'Human detected!', 'error': detectionResult === 'No human detected'}">
+      {{ detectionResult }}
+    </p>
+  </div>
 </div>
