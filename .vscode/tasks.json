@@ -1,0 +1,21 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "ng serve",
+            "type": "shell",
+            "command": "ng serve",
+            "options": {
+                "cwd": "${workspaceFolder}/photo_detect"
+            },
+            "problemMatcher": [
+                "$tsc"
+            ],
+            "isBackground": true,
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        }
+    ]
+}
