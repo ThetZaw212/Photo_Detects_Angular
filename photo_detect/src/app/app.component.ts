@@ -94,7 +94,6 @@ export class AppComponent {
       
       const { data: { text } } = await worker.recognize(imageUrl);
       
-      // Special handling for Myanmar text
       if (this.selectedLanguage === 'mya') {
         const normalizedText = text.normalize('NFC');
         this.detectedText = normalizedText.replace(/[<>&"']/g, (char: string) => {
