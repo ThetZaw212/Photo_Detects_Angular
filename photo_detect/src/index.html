@@ -2,120 +2,17 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <title>PhotoDetect</title>
-    <base href="/">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link href="https://fonts.googleapis.com/css2?family=Pyidaungsu&display=swap" rel="stylesheet">
-    <script src='https://unpkg.com/tesseract.js@4.1.1/dist/tesseract.min.js'></script>
+  <meta charset="utf-8">
+  <title>PhotoDetect</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link href="https://fonts.googleapis.com/css2?family=Pyidaungsu&display=swap" rel="stylesheet">
+  <script src='https://unpkg.com/tesseract.js@4.1.1/dist/tesseract.min.js'></script>
 </head>
 
 <body>
-    <app-root></app-root>
-    <!-- <div class="container">
-        <h1>Text Detection App</h1>
-
-        <div class="upload-section">
-            <input type="file" id="imageInput" accept="image/*" hidden>
-            <button id="uploadBtn">Choose Image</button>
-            <span id="fileName">No file chosen</span>
-        </div>
-
-        <div class="preview-section">
-            <img id="imagePreview" src="#" alt="Preview">
-        </div>
-
-        <div class="controls">
-            <select id="languageSelect" class="language-select">
-                <option value="eng">English</option>
-                <option value="fra">French</option>
-                <option value="spa">Spanish</option>
-                <option value="deu">German</option>
-                <option value="ita">Italian</option>
-                <option value="por">Portuguese</option>
-                <option value="rus">Russian</option>
-                <option value="chi_sim">Chinese Simplified</option>
-                <option value="jpn">Japanese</option>
-                <option value="kor">Korean</option>
-                <option value="mya">Myanmar (Burmese)</option>
-            </select>
-            <button id="detectBtn" disabled>Detect Text</button>
-        </div>
-
-        <div class="result-section">
-            <h2>Detected Text:</h2>
-            <div id="loader" class="loader hidden"></div>
-            <div id="result" class="result-text"></div>
-        </div>
-    </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const uploadBtn = document.getElementById('uploadBtn');
-            const imageInput = document.getElementById('imageInput');
-            const fileName = document.getElementById('fileName');
-            const imagePreview = document.getElementById('imagePreview');
-            const detectBtn = document.getElementById('detectBtn');
-            const result = document.getElementById('result');
-            const loader = document.getElementById('loader');
-            const languageSelect = document.getElementById('languageSelect');
-
-            // Handle upload button click
-            uploadBtn.addEventListener('click', () => {
-                imageInput.click();
-            });
-
-            // Handle file selection
-            imageInput.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    fileName.textContent = file.name;
-                    const reader = new FileReader();
-
-                    reader.onload = (e) => {
-                        imagePreview.src = e.target.result;
-                        imagePreview.style.display = 'block';
-                        detectBtn.disabled = false;
-                    };
-
-                    reader.readAsDataURL(file);
-                }
-            });
-
-            // Handle detect button click
-            detectBtn.addEventListener('click', async () => {
-                try {
-                    // Show loader and disable detect button
-                    loader.classList.remove('hidden');
-                    detectBtn.disabled = true;
-                    result.textContent = '';
-
-                    // Get selected language
-                    const selectedLanguage = languageSelect.value;
-
-                    // Initialize Tesseract worker
-                    const worker = await Tesseract.createWorker();
-
-                    // Recognize text from image with selected language
-                    await worker.loadLanguage(selectedLanguage);
-                    await worker.initialize(selectedLanguage);
-                    const { data: { text } } = await worker.recognize(imagePreview.src);
-
-                    // Terminate worker
-                    await worker.terminate();
-
-                    // Display result
-                    result.textContent = text;
-                } catch (error) {
-                    result.textContent = 'Error: ' + error.message;
-                } finally {
-                    // Hide loader and enable detect button
-                    loader.classList.add('hidden');
-                    detectBtn.disabled = false;
-                }
-            });
-        }); 
-    </script> -->
+  <app-root></app-root>
 </body>
 
 </html>
