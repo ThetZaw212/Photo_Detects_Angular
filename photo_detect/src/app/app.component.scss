@@ -76,3 +76,70 @@
     transform: rotate(360deg);
   }
 }
+
+/* Language selector */
+.language-selector {
+  margin: 10px 0;
+}
+
+.language-select {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  background-color: white;
+  cursor: pointer;
+}
+
+/* Results container */
+.results-container {
+  width: 100%;
+  max-width: 500px;
+  margin-top: 20px;
+}
+
+.text-result {
+  margin-top: 20px;
+  padding: 15px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+
+  h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+  }
+
+  .detected-text {
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #666;
+    font-family: 'Pyidaungsu', 'Myanmar Text', sans-serif;
+  }
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-size: 1.5em;
+  
+  .spinner {
+    border: 8px solid #f3f3f3;
+    border-top: 8px solid #3498db;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+  }
+}
