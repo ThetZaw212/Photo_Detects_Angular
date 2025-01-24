@@ -9,22 +9,40 @@
       <input id="fileInput" type="file" (change)="onFileChange($event)" #fileInput class="file-input" />
     </div>
 
+    <!-- Language selector -->
+    <div class="language-selector">
+      <select (change)="onLanguageChange($event)" [value]="selectedLanguage" class="language-select">
+        <option *ngFor="let lang of languages" [value]="lang.code">
+          {{lang.name}}
+        </option>
+      </select>
+    </div>
+
     <!-- Canvas container -->
     <div class="canvas-container">
       <canvas #canvas class="modern-canvas"></canvas>
     </div>
+
+    <!-- Detection Results -->
+    <div class="results-container">
+      <!-- Human detection result -->
+      <div *ngIf="detectionResult" class="detection-result">
+        <p [ngStyle]="{'color': detectionResult === 'Human detected!' ? '#4caf50' : '#f44336'}">
+          {{ detectionResult }}
+        </p>
+      </div>
+
+      <!-- Text detection result -->
+      <div *ngIf="detectedText" class="text-result">
+        <h3>Detected Text:</h3>
+        <div class="detected-text" [innerHTML]="detectedText"></div>
+      </div>
+    </div>
   </div>
 
   <!-- Loading overlay -->
-  <div *ngIf="isLoading" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; font-size: 1.5em;">
-    <div style="border: 8px solid #f3f3f3; border-top: 8px solid #3498db; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite;"></div>
-    <p style="margin-top: 20px; font-size: 1.2em;">Detecting objects...</p>
-  </div>
-
-  <!-- Result -->
-  <div *ngIf="detectionResult" class="detection-result">
-    <p [ngStyle]="{'color': detectionResult === 'Human detected!' ? '#4caf50' : '#f44336', 'font-size': '18px', 'font-weight': '500', 'margin': '0'}">
-      {{ detectionResult }}
-    </p>
+  <div *ngIf="isLoading" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>Processing image...</p>
   </div>
 </div>
