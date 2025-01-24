@@ -96,9 +96,7 @@ export class AppComponent {
       
       // Special handling for Myanmar text
       if (this.selectedLanguage === 'mya') {
-        // Ensure proper Unicode normalization for Myanmar text
         const normalizedText = text.normalize('NFC');
-        // Sanitize while preserving Myanmar Unicode characters
         this.detectedText = normalizedText.replace(/[<>&"']/g, (char: string) => {
           switch (char) {
             case '<': return '&lt;';
@@ -110,7 +108,6 @@ export class AppComponent {
           }
         });
       } else {
-        // Handle other languages as before
         this.detectedText = text.replace(/[<>&"']/g, (char: string) => {
           switch (char) {
             case '<': return '&lt;';
