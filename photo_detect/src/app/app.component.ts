@@ -107,7 +107,6 @@ export class AppComponent {
           }
         });
       } else {
-        // Handle other languages as before
         this.detectedText = text.replace(/[<>&"']/g, (char: string) => {
           switch (char) {
             case '<': return '&lt;';
