@@ -1,14 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Router } from '@angular/router';
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
 import '@tensorflow/tfjs';
+import { FaceRecognitionComponent } from "./pages/face-recognition/face-recognition.component";
 
 declare const Tesseract: any;
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FaceRecognitionComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -20,6 +22,9 @@ export class AppComponent {
   detectionResult: string | null = null;
   detectedText: string = '';
   selectedLanguage: string = 'eng';
+  constructor(
+    private router: Router
+  ) { }
 
   // Update language options to include Myanmar
   languages = [
@@ -91,9 +96,9 @@ export class AppComponent {
       const worker = await Tesseract.createWorker();
       await worker.loadLanguage(this.selectedLanguage);
       await worker.initialize(this.selectedLanguage);
-      
+
       const { data: { text } } = await worker.recognize(imageUrl);
-      
+
       if (this.selectedLanguage === 'mya') {
         const normalizedText = text.normalize('NFC');
         this.detectedText = normalizedText.replace(/[<>&"']/g, (char: string) => {
@@ -118,7 +123,7 @@ export class AppComponent {
           }
         });
       }
-      
+
       await worker.terminate();
     } catch (error) {
       console.error('Text detection error:', error);
@@ -131,5 +136,9 @@ export class AppComponent {
     if (this.canvas.nativeElement.toDataURL()) {
       this.detectText(this.canvas.nativeElement.toDataURL());
     }
+  }
+
+  faceRecognition() {
+
   }
 }
