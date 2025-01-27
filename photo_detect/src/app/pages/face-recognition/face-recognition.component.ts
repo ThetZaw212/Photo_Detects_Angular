@@ -38,7 +38,8 @@ export class FaceRecognitionComponent implements OnInit {
         this.videoElement.nativeElement.srcObject = stream;
         this.videoElement.nativeElement.play();
         this.isCameraOn = true;
-        this.videoElement.nativeElement.style.transform = 'scaleX(-1)'; // Remove mirror effect
+        // Remove mirror effect
+        this.videoElement.nativeElement.style.transform = 'scaleX(-1)';
       })
       .catch((err) => console.error('Error accessing camera:', err));
   }
@@ -69,7 +70,7 @@ export class FaceRecognitionComponent implements OnInit {
         ctx!.clearRect(0, 0, canvas.width, canvas.height);
         ctx!.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        predictions.forEach((prediction : any) => {
+        predictions.forEach((prediction: any) => {
           const start = prediction.topLeft as [number, number];
           const end = prediction.bottomRight as [number, number];
           const landmarks = prediction.landmarks;
@@ -92,7 +93,7 @@ export class FaceRecognitionComponent implements OnInit {
             ctx!.fill();
           });
 
-          // Check face orientation and eye openness
+          // Check face orientation 
           this.checkOrientation(landmarks);
         });
       }, 100);
