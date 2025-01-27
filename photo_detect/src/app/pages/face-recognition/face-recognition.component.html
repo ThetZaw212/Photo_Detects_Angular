@@ -1,0 +1,11 @@
+<div class="video-container">
+    <video #video autoplay muted></video>
+    <canvas #canvas></canvas>
+    <p *ngIf="!isFaceTurnedLeftOnce" style="color: orange;">Please turn your face to the left</p>
+    <p *ngIf="isFaceTurnedLeftOnce && !isFaceTurnedRightOnce" style="color: orange;">Please turn your face to the right</p>
+    <p *ngIf="isFaceTurnedLeftOnce && isFaceTurnedRightOnce" style="color: green;">Face turn check complete</p>
+</div>
+<button (click)="toggleCamera()">
+  {{ isCameraOn ? 'Turn Camera Off' : 'Turn Camera On' }}
+</button>
+<p>Camera is {{ isCameraOn ? 'On' : 'Off' }}</p>
