@@ -3,8 +3,15 @@
   <canvas #canvas></canvas>
   
   <div class="overlay">
-    <div class="instruction-text">{{ instructionText }}</div>
-    <div class="result-text">{{ resultText }}</div>
+    <!-- <div class="instruction-text">{{ instructionText }}</div>
+    <div class="result-text" [ngStyle]="{'color': 'green'}">{{ resultText }}</div> -->
+    
+    <!-- Add progress indicators -->
+    <div class="progress-indicators">
+      <div [ngClass]="{'completed': leftTurnCompleted}">Left Turn</div>
+      <div [ngClass]="{'completed': rightTurnCompleted}">Right Turn</div>
+      <div [ngClass]="{'completed': blinkCompleted}">Blink Eyes</div>
+    </div>
   </div>
 
   <!-- Toggle Switch -->
