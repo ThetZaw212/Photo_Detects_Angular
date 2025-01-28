@@ -1,11 +1,15 @@
 <div class="video-container">
-    <video #video autoplay muted></video>
-    <canvas #canvas></canvas>
-    <p *ngIf="!isFaceTurnedLeftOnce" style="color: orange;">Please turn your face to the left</p>
-    <p *ngIf="isFaceTurnedLeftOnce && !isFaceTurnedRightOnce" style="color: orange;">Please turn your face to the right</p>
-    <p *ngIf="isFaceTurnedLeftOnce && isFaceTurnedRightOnce" style="color: green;">Face turn check complete</p>
+  <video #video autoplay muted></video>
+  <canvas #canvas></canvas>
+  
+  <div class="overlay">
+    <div class="instruction-text">{{ instructionText }}</div>
+    <div class="result-text">{{ resultText }}</div>
+  </div>
+
+  <!-- Toggle Switch -->
+  <label class="toggle-switch">
+    <input type="checkbox" (change)="toggleCamera()" [checked]="isCameraOn">
+    <span class="slider"></span>
+  </label>
 </div>
-<button (click)="toggleCamera()">
-  {{ isCameraOn ? 'Turn Camera Off' : 'Turn Camera On' }}
-</button>
-<p>Camera is {{ isCameraOn ? 'On' : 'Off' }}</p>
