@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-face-recognition',
+  standalone: true,
   imports: [CommonModule],
   templateUrl: './face-recognition.component.html',
   styleUrl: './face-recognition.component.scss'
@@ -31,8 +32,10 @@ export class FaceRecognitionComponent implements OnInit {
   blinkFrameCount: number = 0;
 
   ngOnInit(): void {
-    this.initCamera();
-    this.loadModel();
+    setTimeout(() => {
+      this.initCamera();
+      this.loadModel();
+    }, 100);
   }
 
   async loadModel() {
@@ -42,21 +45,43 @@ export class FaceRecognitionComponent implements OnInit {
   }
 
   initCamera() {
-    navigator.mediaDevices
-      .getUserMedia({ video: true })
-      .then((stream) => {
-        this.videoElement.nativeElement.srcObject = stream;
-        this.videoElement.nativeElement.play();
-        this.isCameraOn = true;
-      })
-      .catch((err) => console.error('Error accessing camera:', err));
+    if (typeof navigator !== 'undefined' && navigator.mediaDevices) {
+      navigator.mediaDevices
+        .getUserMedia({ 
+          video: {
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+            facingMode: 'user'
+          } 
+        })
+        .then((stream) => {
+          if (this.videoElement && this.videoElement.nativeElement) {
+            this.videoElement.nativeElement.srcObject = stream;
+            this.videoElement.nativeElement.play();
+            this.isCameraOn = true;
+          }
+        })
+        .catch((err) => {
+          console.error('Error accessing camera:', err);
+          this.handleCameraError(err);
+        });
+    } else {
+      console.error('MediaDevices API not available');
+      this.handleCameraError(new Error('Camera access not available'));
+    }
+  }
+
+  private handleCameraError(error: Error) {
+    this.instructionText = 'Camera access error. Please check permissions and try again.';
+    console.error('Camera initialization error:', error);
   }
 
   toggleCamera() {
-    if (this.isCameraOn) {
+    if (this.isCameraOn && this.videoElement?.nativeElement?.srcObject) {
       const stream = this.videoElement.nativeElement.srcObject as MediaStream;
       const tracks = stream.getTracks();
       tracks.forEach(track => track.stop());
+      this.videoElement.nativeElement.srcObject = null;
       this.isCameraOn = false;
     } else {
       this.initCamera();
@@ -64,9 +89,19 @@ export class FaceRecognitionComponent implements OnInit {
   }
 
   async detectFaces() {
+    if (!this.videoElement?.nativeElement || !this.canvasElement?.nativeElement) {
+      console.error('Video or canvas element not initialized');
+      return;
+    }
+
     const video = this.videoElement.nativeElement;
     const canvas = this.canvasElement.nativeElement;
     const ctx = canvas.getContext('2d');
+
+    if (!ctx) {
+      console.error('Could not get canvas context');
+      return;
+    }
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
