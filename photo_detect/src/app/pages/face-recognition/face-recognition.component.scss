@@ -34,7 +34,7 @@ canvas {
 .instruction-text,
 .result-text {
   position: absolute;
-  top: 10px;
+  top: 50px;
   left: 10px;
   text-align: center;
   background: rgba(0, 0, 0, 0.7); // Semi-transparent background
@@ -116,4 +116,8 @@ input:checked + .slider:before {
 .result-text {
   font-weight: bold;
   font-size: 1.2em;
+}
+
+.mirror {
+  transform: scaleX(-1);
 }
