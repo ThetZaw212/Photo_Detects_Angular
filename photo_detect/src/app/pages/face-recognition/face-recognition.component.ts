@@ -20,7 +20,15 @@ export class FaceRecognitionComponent implements OnInit {
   isBlinking: boolean = false;
   currentState: 'left' | 'right' | 'blink' | 'done' = 'left'; // Track the current state
   resultText: string = ''; // Show result text
-  instructionText: string = 'Please turn your face to the left and right.'; // Show instructions
+  instructionText: string = 'Please turn your face to the left'; // Show instructions
+
+  // Add new properties to track state completion
+  leftTurnCompleted: boolean = false;
+  rightTurnCompleted: boolean = false;
+  blinkCompleted: boolean = false;
+
+  // Add new property to track blink frames
+  blinkFrameCount: number = 0;
 
   ngOnInit(): void {
     this.initCamera();
@@ -63,102 +71,141 @@ export class FaceRecognitionComponent implements OnInit {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
-    if (this.model) {
-      setInterval(async () => {
-        const predictions = await this.model.estimateFaces(video, false);
+    let lastProcessTime = 0;
+    const PROCESS_INTERVAL = 200; // Process every 200ms instead of every frame
 
-        ctx!.clearRect(0, 0, canvas.width, canvas.height);
-        ctx!.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const detect = async (timestamp: number) => {
+      if (!this.isCameraOn) return;
+      
+      // Throttle processing
+      if (timestamp - lastProcessTime < PROCESS_INTERVAL) {
+        requestAnimationFrame(detect);
+        return;
+      }
+      
+      lastProcessTime = timestamp;
+      const predictions = await this.model.estimateFaces(video, false);
+      
+      ctx!.clearRect(0, 0, canvas.width, canvas.height);
+      ctx!.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        predictions.forEach((prediction: any) => {
-          const start = prediction.topLeft as [number, number];
-          const end = prediction.bottomRight as [number, number];
-          const landmarks = prediction.landmarks;
+      if (predictions.length > 0) {
+        const prediction = predictions[0]; // Focus on the primary face
+        const start = prediction.topLeft;
+        const end = prediction.bottomRight;
+        const landmarks = prediction.landmarks;
 
-          const x = start[0];
-          const y = start[1];
-          const width = end[0] - start[0];
-          const height = end[1] - start[1];
+        // Draw bounding box
+        const x = start[0];
+        const y = start[1];
+        const width = end[0] - start[0];
+        const height = end[1] - start[1];
 
-          // Draw bounding box
-          ctx!.strokeStyle = 'blue';
-          ctx!.lineWidth = 2;
-          ctx!.strokeRect(x, y, width, height);
+        ctx!.strokeStyle = '#00ff00';
+        ctx!.lineWidth = 2;
+        ctx!.strokeRect(x, y, width, height);
 
-          // Draw landmarks
-          landmarks.forEach(([lx, ly]: [number, number]) => {
-            ctx!.fillStyle = 'red';
-            ctx!.beginPath();
-            ctx!.arc(lx, ly, 3, 0, 2 * Math.PI);
-            ctx!.fill();
-          });
-
-          // Check face orientation and blinking
-          this.checkOrientation(landmarks);
-          if (this.currentState === 'blink') {
-            this.checkBlinking(landmarks);
-          }
+        // Draw landmarks with different colors
+        landmarks.forEach(([lx, ly]: [number, number], index: number) => {
+          ctx!.fillStyle = index < 2 ? '#ff0000' : '#00ff00'; // Red for eyes, green for others
+          ctx!.beginPath();
+          ctx!.arc(lx, ly, 4, 0, 2 * Math.PI);
+          ctx!.fill();
         });
-      }, 100);
-    }
+
+        // Process face orientation and blinking
+        this.checkOrientation(landmarks);
+        if (this.currentState === 'blink') {
+          this.checkBlinking(landmarks);
+        }
+      }
+
+      requestAnimationFrame(detect);
+    };
+
+    requestAnimationFrame(detect);
   }
 
   checkOrientation(landmarks: number[][]) {
-    const leftEye = landmarks[0]; // Approximation of left eye
-    const rightEye = landmarks[1]; // Approximation of right eye
-    const nose = landmarks[2]; // Approximation of nose bridge
-    const leftCheek = landmarks[3]; // Approximation of left cheek
-    const rightCheek = landmarks[4]; // Approximation of right cheek
-  
-    const leftFaceWidth = Math.abs(leftEye[0] - leftCheek[0]);
-    const rightFaceWidth = Math.abs(rightEye[0] - rightCheek[0]);
-  
-    if (this.currentState === 'left' && leftFaceWidth > rightFaceWidth) {
-      this.resultText = 'Face turned left - Success!';
-      console.log('Face turned left');
-      this.instructionText = 'Please wait...';
-      this.currentState = 'right'; 
-      this.delayAndProceed(); 
-    } else if (this.currentState === 'right' && rightFaceWidth > leftFaceWidth) {
-      this.resultText = 'Face turned right - Success!';
-      this.instructionText = 'Please blink your eyes.'; 
-      console.log('Face turned right');
-      this.currentState = 'blink'; 
-      this.delayAndProceed(); 
+    const leftEye = landmarks[0];
+    const rightEye = landmarks[1];
+    const nose = landmarks[2];
+
+    const leftEyeToNose = Math.abs(leftEye[0] - nose[0]);
+    const rightEyeToNose = Math.abs(rightEye[0] - nose[0]);
+    
+    const orientationRatio = leftEyeToNose / rightEyeToNose;
+    console.log('Orientation ratio:', orientationRatio);
+
+    // More strict thresholds for better detection
+    if (this.currentState === 'left') {
+      if (orientationRatio < 0.6 && !this.leftTurnCompleted) { // More extreme left turn required
+        this.leftTurnCompleted = true;
+        this.resultText = 'Face turned left - Success!';
+        console.log('Face turned left');
+        this.instructionText = 'Please turn your face to the right';
+        
+        // Add delay before changing to right state
+        setTimeout(() => {
+          this.currentState = 'right';
+          this.resultText = '';
+        }, 2000); // Increased delay to 2 seconds
+      }
+    } else if (this.currentState === 'right') {
+      if (orientationRatio > 1.4 && !this.rightTurnCompleted) { // More extreme right turn required
+        this.rightTurnCompleted = true;
+        console.log('Face turned right');
+        this.resultText = 'Face turned right - Success!';
+        this.instructionText = 'Get ready to blink your eyes';
+        
+        // Add longer delay before blink detection
+        setTimeout(() => {
+          this.currentState = 'blink';
+          this.resultText = '';
+          this.instructionText = 'Please blink your eyes now';
+        }, 3000); // 3 second delay before blink detection
+      }
     }
   }
 
   checkBlinking(landmarks: number[][]) {
+    if (!this.leftTurnCompleted || !this.rightTurnCompleted) {
+      return;
+    }
+
     const leftEye = landmarks[0];
     const rightEye = landmarks[1];
-  
-    const eyeAspectRatio = (Math.abs(leftEye[1] - rightEye[1]) + Math.abs(leftEye[0] - rightEye[0])) / 2;
-  
-    if (eyeAspectRatio < 10) {
-      // Third state: Blinking detected
-      this.isBlinking = true;
-      this.resultText = 'Blink detected - Success!';
-      this.instructionText = 'Process complete!'; // Final instruction
-      console.log('Blink detected');
-      this.currentState = 'done'; // Final state
-      this.delayAndClearResult();
-    }
-  }
+    
+    const leftEyeY = leftEye[1];
+    const rightEyeY = rightEye[1];
+    const eyeDistance = Math.abs(leftEye[0] - rightEye[0]);
+    
+    const eyeAspectRatio = Math.abs(leftEyeY - rightEyeY) / eyeDistance;
 
-  delayAndProceed() {
-    setTimeout(() => {
-      this.resultText = ''; // Clear the result text
-      if (this.currentState === 'right') {
-        this.instructionText = 'Please turn your face to the right.'; // Update instruction for the next state
-      } else if (this.currentState === 'blink') {
-        this.instructionText = 'Please blink your eyes.'; // Update instruction for blinking
+    // Adjusted threshold and added minimum hold time
+    const BLINK_THRESHOLD = 0.07; // More sensitive threshold
+    const MIN_BLINK_FRAMES = 3; // Number of frames blink must be detected
+    
+    if (eyeAspectRatio < BLINK_THRESHOLD) {
+      if (!this.blinkFrameCount) {
+        this.blinkFrameCount = 1;
+      } else {
+        this.blinkFrameCount++;
       }
-    }, 500); // Delay for 500ms
-  }
-
-  delayAndClearResult() {
-    setTimeout(() => {
-      this.resultText = ''; // Clear the result text
-    }, 500); // Delay for 500ms
+      
+      if (this.blinkFrameCount >= MIN_BLINK_FRAMES && !this.blinkCompleted) {
+        this.blinkCompleted = true;
+        this.isBlinking = true;
+        this.resultText = 'Blink detected - Success!';
+        console.log('Blink detected');
+        this.instructionText = 'All steps completed successfully!';
+        this.currentState = 'done';
+        setTimeout(() => {
+          this.resultText = '';
+        }, 2000);
+      }
+    } else {
+      this.blinkFrameCount = 0;
+    }
   }
 }
