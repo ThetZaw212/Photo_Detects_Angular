@@ -1,4 +1,5 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import * as tf from '@tensorflow/tfjs';
 import * as blazeface from '@tensorflow-models/blazeface';
 import { CommonModule } from '@angular/common';
@@ -31,6 +32,17 @@ export class FaceRecognitionComponent implements OnInit {
   // Add new property to track blink frames
   blinkFrameCount: number = 0;
 
+  // Add audio element for the complete song
+  private audio: HTMLAudioElement | null = null;
+
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
+    // Only create the Audio object if running in the browser
+    if (isPlatformBrowser(this.platformId)) {
+      this.audio = new Audio();
+      this.audio.src = 'success.mp3'; // Path to your audio file
+    }
+  }
+
   ngOnInit(): void {
     setTimeout(() => {
       this.initCamera();
@@ -47,18 +59,22 @@ export class FaceRecognitionComponent implements OnInit {
   initCamera() {
     if (typeof navigator !== 'undefined' && navigator.mediaDevices) {
       navigator.mediaDevices
-        .getUserMedia({ 
+        .getUserMedia({
           video: {
             width: { ideal: 640 },
             height: { ideal: 480 },
             facingMode: 'user'
-          } 
+          }
         })
         .then((stream) => {
           if (this.videoElement && this.videoElement.nativeElement) {
-            this.videoElement.nativeElement.srcObject = stream;
-            this.videoElement.nativeElement.play();
+            const video = this.videoElement.nativeElement;
+            video.srcObject = stream;
+            video.play();
             this.isCameraOn = true;
+
+            // Start the mirroring effect
+            this.mirrorVideo();
           }
         })
         .catch((err) => {
@@ -69,6 +85,32 @@ export class FaceRecognitionComponent implements OnInit {
       console.error('MediaDevices API not available');
       this.handleCameraError(new Error('Camera access not available'));
     }
+  }
+
+  mirrorVideo() {
+    if (!this.videoElement || !this.canvasElement) return;
+
+    const video = this.videoElement.nativeElement;
+    const canvas = this.canvasElement.nativeElement;
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const drawFrame = () => {
+      if (!this.isCameraOn) return;
+
+      if (ctx) {
+        ctx.save();
+        ctx.scale(-1, 1); // Mirror the image
+        ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+        ctx.restore();
+      }
+
+      requestAnimationFrame(drawFrame);
+    };
+
+    drawFrame();
   }
 
   private handleCameraError(error: Error) {
@@ -111,42 +153,24 @@ export class FaceRecognitionComponent implements OnInit {
 
     const detect = async (timestamp: number) => {
       if (!this.isCameraOn) return;
-      
+
       // Throttle processing
       if (timestamp - lastProcessTime < PROCESS_INTERVAL) {
         requestAnimationFrame(detect);
         return;
       }
-      
+
       lastProcessTime = timestamp;
       const predictions = await this.model.estimateFaces(video, false);
-      
+
       ctx!.clearRect(0, 0, canvas.width, canvas.height);
       ctx!.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       if (predictions.length > 0) {
         const prediction = predictions[0]; // Focus on the primary face
-        const start = prediction.topLeft;
-        const end = prediction.bottomRight;
-        const landmarks = prediction.landmarks;
-
-        // Draw bounding box
-        const x = start[0];
-        const y = start[1];
-        const width = end[0] - start[0];
-        const height = end[1] - start[1];
-
-        ctx!.strokeStyle = '#00ff00';
-        ctx!.lineWidth = 2;
-        ctx!.strokeRect(x, y, width, height);
-
-        // Draw landmarks with different colors
-        landmarks.forEach(([lx, ly]: [number, number], index: number) => {
-          ctx!.fillStyle = index < 2 ? '#ff0000' : '#00ff00'; // Red for eyes, green for others
-          ctx!.beginPath();
-          ctx!.arc(lx, ly, 4, 0, 2 * Math.PI);
-          ctx!.fill();
-        });
+        const start = prediction.topLeft as [number, number];
+        const end = prediction.bottomRight as [number, number];
+        const landmarks = prediction.landmarks as [number, number][];
 
         // Process face orientation and blinking
         this.checkOrientation(landmarks);
@@ -168,7 +192,7 @@ export class FaceRecognitionComponent implements OnInit {
 
     const leftEyeToNose = Math.abs(leftEye[0] - nose[0]);
     const rightEyeToNose = Math.abs(rightEye[0] - nose[0]);
-    
+
     const orientationRatio = leftEyeToNose / rightEyeToNose;
     console.log('Orientation ratio:', orientationRatio);
 
@@ -179,7 +203,7 @@ export class FaceRecognitionComponent implements OnInit {
         this.resultText = 'Face turned left - Success!';
         console.log('Face turned left');
         this.instructionText = 'Please turn your face to the right';
-        
+
         // Add delay before changing to right state
         setTimeout(() => {
           this.currentState = 'right';
@@ -192,7 +216,7 @@ export class FaceRecognitionComponent implements OnInit {
         console.log('Face turned right');
         this.resultText = 'Face turned right - Success!';
         this.instructionText = 'Get ready to blink your eyes';
-        
+
         // Add longer delay before blink detection
         setTimeout(() => {
           this.currentState = 'blink';
@@ -210,24 +234,24 @@ export class FaceRecognitionComponent implements OnInit {
 
     const leftEye = landmarks[0];
     const rightEye = landmarks[1];
-    
+
     const leftEyeY = leftEye[1];
     const rightEyeY = rightEye[1];
     const eyeDistance = Math.abs(leftEye[0] - rightEye[0]);
-    
+
     const eyeAspectRatio = Math.abs(leftEyeY - rightEyeY) / eyeDistance;
 
     // Adjusted threshold and added minimum hold time
     const BLINK_THRESHOLD = 0.07; // More sensitive threshold
     const MIN_BLINK_FRAMES = 3; // Number of frames blink must be detected
-    
+
     if (eyeAspectRatio < BLINK_THRESHOLD) {
       if (!this.blinkFrameCount) {
         this.blinkFrameCount = 1;
       } else {
         this.blinkFrameCount++;
       }
-      
+
       if (this.blinkFrameCount >= MIN_BLINK_FRAMES && !this.blinkCompleted) {
         this.blinkCompleted = true;
         this.isBlinking = true;
@@ -235,6 +259,12 @@ export class FaceRecognitionComponent implements OnInit {
         console.log('Blink detected');
         this.instructionText = 'All steps completed successfully!';
         this.currentState = 'done';
+
+        // Play the complete song if audio is available
+        if (this.audio) {
+          this.audio.play();
+        }
+
         setTimeout(() => {
           this.resultText = '';
         }, 2000);
