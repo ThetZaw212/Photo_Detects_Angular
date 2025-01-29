@@ -32,14 +32,19 @@ export class FaceRecognitionComponent implements OnInit {
   // Add new property to track blink frames
   blinkFrameCount: number = 0;
 
-  // Add audio element for the complete song
-  private audio: HTMLAudioElement | null = null;
+  // Audio elements for different states
+  public modelLoadedAudio: HTMLAudioElement | null = null;
+  public leftTurnAudio: HTMLAudioElement | null = null;
+  public rightTurnAudio: HTMLAudioElement | null = null;
+  public blinkAudio: HTMLAudioElement | null = null;
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {
-    // Only create the Audio object if running in the browser
     if (isPlatformBrowser(this.platformId)) {
-      this.audio = new Audio();
-      this.audio.src = 'success.mp3'; // Path to your audio file
+      // Initialize audio elements
+      this.modelLoadedAudio = new Audio('faceload.mp3');
+      this.leftTurnAudio = new Audio('success.mp3');
+      this.rightTurnAudio = new Audio('success.mp3');
+      this.blinkAudio = new Audio('success.mp3');
     }
   }
 
@@ -53,6 +58,9 @@ export class FaceRecognitionComponent implements OnInit {
   async loadModel() {
     this.model = await blazeface.load();
     console.log('Model loaded');
+    if (this.modelLoadedAudio) {
+      this.modelLoadedAudio.play(); // Play sound when model is loaded
+    }
     this.detectFaces();
   }
 
@@ -202,6 +210,9 @@ export class FaceRecognitionComponent implements OnInit {
         this.leftTurnCompleted = true;
         this.resultText = 'Face turned left - Success!';
         console.log('Face turned left');
+        if (this.leftTurnAudio) {
+          this.leftTurnAudio.play(); // Play left turn success sound
+        }
         this.instructionText = 'Please turn your face to the right';
 
         // Add delay before changing to right state
@@ -215,6 +226,9 @@ export class FaceRecognitionComponent implements OnInit {
         this.rightTurnCompleted = true;
         console.log('Face turned right');
         this.resultText = 'Face turned right - Success!';
+        if (this.rightTurnAudio) {
+          this.rightTurnAudio.play(); // Play right turn success sound
+        }
         this.instructionText = 'Get ready to blink your eyes';
 
         // Add longer delay before blink detection
@@ -257,13 +271,11 @@ export class FaceRecognitionComponent implements OnInit {
         this.isBlinking = true;
         this.resultText = 'Blink detected - Success!';
         console.log('Blink detected');
+        if (this.blinkAudio) {
+          this.blinkAudio.play(); // Play blink success sound
+        }
         this.instructionText = 'All steps completed successfully!';
         this.currentState = 'done';
-
-        // Play the complete song if audio is available
-        if (this.audio) {
-          this.audio.play();
-        }
 
         setTimeout(() => {
           this.resultText = '';
