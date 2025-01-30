@@ -148,14 +148,86 @@ export class FaceRecognitionComponent implements OnInit {
 
       if (predictions.length > 0) {
         const prediction = predictions[0]; // Focus on the primary face
-        const start = prediction.topLeft as [number, number];
-        const end = prediction.bottomRight as [number, number];
         const landmarks = prediction.landmarks as [number, number][];
 
-        // Process face orientation and blinking
-        this.checkOrientation(landmarks);
+        const leftEye = landmarks[0];
+        const rightEye = landmarks[1];
+        const nose = landmarks[2];
+
+        const leftEyeToNose = Math.abs(leftEye[0] - nose[0]);
+        const rightEyeToNose = Math.abs(rightEye[0] - nose[0]);
+
+        const orientationRatio = leftEyeToNose / rightEyeToNose;
+        console.log('Orientation ratio:', orientationRatio);
+
+        if (this.currentState === 'left') {
+          if (orientationRatio > 65.2 && !this.leftTurnCompleted) { 
+            this.leftTurnCompleted = true;
+            this.resultText = 'Face turned left - Success!';
+            console.log('Face turned left');
+            if (this.leftTurnAudio) {
+              this.leftTurnAudio.play(); 
+            }
+            this.instructionText = 'Please turn your face to the right';
+
+            setTimeout(() => {
+              this.currentState = 'right';
+              this.resultText = '';
+            }, 2000); 
+          }
+        } else if (this.currentState === 'right') {
+          if (orientationRatio < 0.46 && !this.rightTurnCompleted) { 
+            this.rightTurnCompleted = true;
+            console.log('Face turned right');
+            this.resultText = 'Face turned right - Success!';
+            if (this.rightTurnAudio) {
+              this.rightTurnAudio.play(); 
+            }
+            this.instructionText = 'Get ready to blink your eyes';
+
+            setTimeout(() => {
+              this.currentState = 'blink';
+              this.resultText = '';
+              this.instructionText = 'Please blink your eyes now';
+            }, 3000); 
+          }
+        }
+
         if (this.currentState === 'blink') {
-          this.checkBlinking(landmarks);
+          const leftEyeY = leftEye[1];
+          const rightEyeY = rightEye[1];
+          const eyeDistance = Math.abs(leftEye[0] - rightEye[0]);
+
+          const eyeAspectRatio = Math.abs(leftEyeY - rightEyeY) / eyeDistance;
+
+          const BLINK_THRESHOLD = 0.07; 
+          const MIN_BLINK_FRAMES = 3; 
+
+          if (eyeAspectRatio < BLINK_THRESHOLD) {
+            if (!this.blinkFrameCount) {
+              this.blinkFrameCount = 1;
+            } else {
+              this.blinkFrameCount++;
+            }
+
+            if (this.blinkFrameCount >= MIN_BLINK_FRAMES && !this.blinkCompleted) {
+              this.blinkCompleted = true;
+              this.isBlinking = true;
+              this.resultText = 'Blink detected - Success!';
+              console.log('Blink detected');
+              if (this.blinkAudio) {
+                this.blinkAudio.play(); 
+              }
+              this.instructionText = 'All steps completed successfully!';
+              this.currentState = 'done';
+
+              setTimeout(() => {
+                this.resultText = '';
+              }, 2000);
+            }
+          } else {
+            this.blinkFrameCount = 0;
+          }
         }
       }
 
@@ -163,95 +235,5 @@ export class FaceRecognitionComponent implements OnInit {
     };
 
     requestAnimationFrame(detect);
-  }
-
-  checkOrientation(landmarks: number[][]) {
-    const leftEye = landmarks[0];
-    const rightEye = landmarks[1];
-    const nose = landmarks[2];
-
-    const leftEyeToNose = Math.abs(leftEye[0] - nose[0]);
-    const rightEyeToNose = Math.abs(rightEye[0] - nose[0]);
-
-    const orientationRatio = leftEyeToNose / rightEyeToNose;
-    console.log('Orientation ratio:', orientationRatio);
-
-    if (this.currentState === 'left') {
-      if (orientationRatio > 5.8 && !this.leftTurnCompleted) { 
-        this.leftTurnCompleted = true;
-        this.resultText = 'Face turned left - Success!';
-        console.log('Face turned left');
-        if (this.leftTurnAudio) {
-          this.leftTurnAudio.play(); 
-        }
-        this.instructionText = 'Please turn your face to the right';
-
-        setTimeout(() => {
-          this.currentState = 'right';
-          this.resultText = '';
-        }, 2000); 
-      }
-    } else if (this.currentState === 'right') {
-      if (orientationRatio < 0.26 && !this.rightTurnCompleted) { 
-        this.rightTurnCompleted = true;
-        console.log('Face turned right');
-        this.resultText = 'Face turned right - Success!';
-        if (this.rightTurnAudio) {
-          this.rightTurnAudio.play(); 
-        }
-        this.instructionText = 'Get ready to blink your eyes';
-
-        setTimeout(() => {
-          this.currentState = 'blink';
-          this.resultText = '';
-          this.instructionText = 'Please blink your eyes now';
-        }, 3000); 
-      }
-    }
-  }
-
-  checkBlinking(landmarks: number[][]) {
-    if (!this.leftTurnCompleted || !this.rightTurnCompleted) {
-      return;
-    }
-
-    const leftEye = landmarks[0];
-    const rightEye = landmarks[1];
-
-    const leftEyeY = leftEye[1];
-    const rightEyeY = rightEye[1];
-    const eyeDistance = Math.abs(leftEye[0] - rightEye[0]);
-
-    const eyeAspectRatio = Math.abs(leftEyeY - rightEyeY) / eyeDistance;
-
-    // Adjusted threshold and added minimum hold time
-    const BLINK_THRESHOLD = 0.07; // More sensitive threshold
-    const MIN_BLINK_FRAMES = 3; // Number of frames blink must be detected
-
-    if (eyeAspectRatio < BLINK_THRESHOLD) {
-      if (!this.blinkFrameCount) {
-        this.blinkFrameCount = 1;
-      } else {
-        this.blinkFrameCount++;
-      }
-
-      if (this.blinkFrameCount >= MIN_BLINK_FRAMES && !this.blinkCompleted) {
-        this.blinkCompleted = true;
-        this.isBlinking = true;
-        this.resultText = 'Blink detected - Success!';
-        console.log('Blink detected');
-        if (this.blinkAudio) {
-          this.blinkAudio.play(); // Play blink success sound
-        }
-        this.instructionText = 'All steps completed successfully!';
-        this.currentState = 'done';
-
-        setTimeout(() => {
-          this.resultText = '';
-        }, 2000);
-      }
-    } else {
-      this.blinkFrameCount = 0;
-    }
   }
 }
