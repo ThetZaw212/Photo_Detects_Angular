@@ -98,18 +98,6 @@ export class FaceRecognitionComponent implements OnInit {
     console.error('Camera initialization error:', error);
   }
 
-  toggleCamera() {
-    if (this.isCameraOn && this.videoElement?.nativeElement?.srcObject) {
-      const stream = this.videoElement.nativeElement.srcObject as MediaStream;
-      const tracks = stream.getTracks();
-      tracks.forEach(track => track.stop());
-      this.videoElement.nativeElement.srcObject = null;
-      this.isCameraOn = false;
-    } else {
-      this.initCamera();
-    }
-  }
-
   async detectFaces() {
     if (!this.videoElement?.nativeElement || !this.canvasElement?.nativeElement) {
       console.error('Video or canvas element not initialized');
@@ -161,27 +149,27 @@ export class FaceRecognitionComponent implements OnInit {
         console.log('Orientation ratio:', orientationRatio);
 
         if (this.currentState === 'left') {
-          if (orientationRatio > 65.2 && !this.leftTurnCompleted) { 
+          if (orientationRatio > 6.2 && !this.leftTurnCompleted) {
             this.leftTurnCompleted = true;
             this.resultText = 'Face turned left - Success!';
             console.log('Face turned left');
             if (this.leftTurnAudio) {
-              this.leftTurnAudio.play(); 
+              this.leftTurnAudio.play();
             }
             this.instructionText = 'Please turn your face to the right';
 
             setTimeout(() => {
               this.currentState = 'right';
               this.resultText = '';
-            }, 2000); 
+            }, 2000);
           }
         } else if (this.currentState === 'right') {
-          if (orientationRatio < 0.46 && !this.rightTurnCompleted) { 
+          if (orientationRatio < 0.63 && !this.rightTurnCompleted) {
             this.rightTurnCompleted = true;
             console.log('Face turned right');
             this.resultText = 'Face turned right - Success!';
             if (this.rightTurnAudio) {
-              this.rightTurnAudio.play(); 
+              this.rightTurnAudio.play();
             }
             this.instructionText = 'Get ready to blink your eyes';
 
@@ -189,7 +177,7 @@ export class FaceRecognitionComponent implements OnInit {
               this.currentState = 'blink';
               this.resultText = '';
               this.instructionText = 'Please blink your eyes now';
-            }, 3000); 
+            }, 3000);
           }
         }
 
@@ -200,8 +188,8 @@ export class FaceRecognitionComponent implements OnInit {
 
           const eyeAspectRatio = Math.abs(leftEyeY - rightEyeY) / eyeDistance;
 
-          const BLINK_THRESHOLD = 0.07; 
-          const MIN_BLINK_FRAMES = 3; 
+          const BLINK_THRESHOLD = 0.07;
+          const MIN_BLINK_FRAMES = 3;
 
           if (eyeAspectRatio < BLINK_THRESHOLD) {
             if (!this.blinkFrameCount) {
@@ -216,7 +204,7 @@ export class FaceRecognitionComponent implements OnInit {
               this.resultText = 'Blink detected - Success!';
               console.log('Blink detected');
               if (this.blinkAudio) {
-                this.blinkAudio.play(); 
+                this.blinkAudio.play();
               }
               this.instructionText = 'All steps completed successfully!';
               this.currentState = 'done';
