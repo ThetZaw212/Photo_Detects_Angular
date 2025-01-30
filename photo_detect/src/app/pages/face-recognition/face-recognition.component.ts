@@ -72,17 +72,15 @@ export class FaceRecognitionComponent implements OnInit {
             width: { ideal: 640 },
             height: { ideal: 480 },
             facingMode: 'user'
-          }
+          },
         })
         .then((stream) => {
           if (this.videoElement && this.videoElement.nativeElement) {
             const video = this.videoElement.nativeElement;
             video.srcObject = stream;
             video.play();
+            video.style.transform = 'none'; // Remove mirror effect
             this.isCameraOn = true;
-
-            // Start the mirroring effect
-            this.mirrorVideo();
           }
         })
         .catch((err) => {
@@ -93,32 +91,6 @@ export class FaceRecognitionComponent implements OnInit {
       console.error('MediaDevices API not available');
       this.handleCameraError(new Error('Camera access not available'));
     }
-  }
-
-  mirrorVideo() {
-    if (!this.videoElement || !this.canvasElement) return;
-
-    const video = this.videoElement.nativeElement;
-    const canvas = this.canvasElement.nativeElement;
-    const ctx = canvas.getContext('2d');
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    const drawFrame = () => {
-      if (!this.isCameraOn) return;
-
-      if (ctx) {
-        ctx.save();
-        ctx.scale(-1, 1); // Mirror the image
-        ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
-        ctx.restore();
-      }
-
-      requestAnimationFrame(drawFrame);
-    };
-
-    drawFrame();
   }
 
   private handleCameraError(error: Error) {
@@ -204,39 +176,36 @@ export class FaceRecognitionComponent implements OnInit {
     const orientationRatio = leftEyeToNose / rightEyeToNose;
     console.log('Orientation ratio:', orientationRatio);
 
-    // More strict thresholds for better detection
     if (this.currentState === 'left') {
-      if (orientationRatio < 0.6 && !this.leftTurnCompleted) { // More extreme left turn required
+      if (orientationRatio > 5.8 && !this.leftTurnCompleted) { 
         this.leftTurnCompleted = true;
         this.resultText = 'Face turned left - Success!';
         console.log('Face turned left');
         if (this.leftTurnAudio) {
-          this.leftTurnAudio.play(); // Play left turn success sound
+          this.leftTurnAudio.play(); 
         }
         this.instructionText = 'Please turn your face to the right';
 
-        // Add delay before changing to right state
         setTimeout(() => {
           this.currentState = 'right';
           this.resultText = '';
-        }, 2000); // Increased delay to 2 seconds
+        }, 2000); 
       }
     } else if (this.currentState === 'right') {
-      if (orientationRatio > 1.4 && !this.rightTurnCompleted) { // More extreme right turn required
+      if (orientationRatio < 0.26 && !this.rightTurnCompleted) { 
         this.rightTurnCompleted = true;
         console.log('Face turned right');
         this.resultText = 'Face turned right - Success!';
         if (this.rightTurnAudio) {
-          this.rightTurnAudio.play(); // Play right turn success sound
+          this.rightTurnAudio.play(); 
         }
         this.instructionText = 'Get ready to blink your eyes';
 
-        // Add longer delay before blink detection
         setTimeout(() => {
           this.currentState = 'blink';
           this.resultText = '';
           this.instructionText = 'Please blink your eyes now';
-        }, 3000); // 3 second delay before blink detection
+        }, 3000); 
       }
     }
   }
