@@ -3,7 +3,7 @@ body {
   font-family: 'Arial', sans-serif;
   margin: 0;
   padding: 0;
-  background-color: #f9f9f9;
+  background-color: #f0f2f5;
 }
 
 .app-container {
@@ -20,10 +20,10 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 20px;
-  padding: 20px;
+  padding: 30px;
   background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 800px;
 }
@@ -42,17 +42,18 @@ body {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: 12px 24px;
-  background: #0cf100;
+  padding: 14px 28px;
+  background: #007bff;
   color: white;
   border-radius: 8px;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: background 0.3s ease, transform 0.3s ease;
   width: 100%;
 }
 
 .upload-button:hover {
-  background: #02ff39;
+  background: #0056b3;
+  transform: translateY(-2px);
 }
 
 .upload-icon {
@@ -81,7 +82,7 @@ body {
   height: 500px;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
 }
 
 .modern-canvas {
@@ -99,13 +100,18 @@ body {
 }
 
 .language-select {
-  padding: 8px 16px;
-  border-radius: 6px;
+  padding: 10px 18px;
+  border-radius: 8px;
   border: 1px solid #ddd;
   font-size: 14px;
   background-color: white;
   cursor: pointer;
   width: 100%;
+  transition: border-color 0.3s ease;
+}
+
+.language-select:hover {
+  border-color: #007bff;
 }
 
 /* Results container */
@@ -117,10 +123,10 @@ body {
 
 .text-result {
   margin-top: 20px;
-  padding: 15px;
+  padding: 20px;
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .text-result h3 {
@@ -175,7 +181,7 @@ body {
 /* Responsive Design */
 @media (max-width: 768px) {
   .container {
-    padding: 15px;
+    padding: 20px;
   }
 
   .upload-container {
@@ -197,7 +203,7 @@ body {
 
 @media (max-width: 480px) {
   .upload-button {
-    padding: 10px 20px;
+    padding: 12px 24px;
   }
 
   .upload-text {
