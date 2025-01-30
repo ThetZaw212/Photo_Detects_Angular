@@ -1,7 +1,6 @@
 <div class="video-container">
   <video #video autoplay muted style="transform: none;"></video>
   <canvas #canvas ></canvas>
-  
   <div class="overlay">
     <div class="instruction-text ">{{ instructionText }}</div>
     
@@ -12,10 +11,4 @@
       <div [ngClass]="{'completed': blinkCompleted}">Blink Eyes</div>
     </div>
   </div>
-
-  <!-- Toggle Switch -->
-  <label class="toggle-switch">
-    <input type="checkbox" (change)="toggleCamera()" [checked]="isCameraOn">
-    <span class="slider"></span>
-  </label>
 </div>
